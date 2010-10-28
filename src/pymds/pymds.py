@@ -32,10 +32,13 @@ import getopt
 
 from utils import *
 
+
+
 class DnsError(Exception):
     pass
 
-def serve():
+
+def serve(config_files, listen_host, listen_port):
     udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udps.bind((listen_host, listen_port))
     #ns_resource_records, ar_resource_records = compute_name_server_resources(_name_servers)
@@ -153,7 +156,7 @@ def format_resource(resource, question):
     r += resource['rdata']
     return r
 
-def read_config():
+def read_config(config_files):
     for config_file in config_files:
         config_files[config_file] = config = {}
         config_parser = ConfigParser.SafeConfigParser()
@@ -208,32 +211,39 @@ def die(msg):
 def usage(cmd):
     die("Usage: %s [conf file]\n" % cmd)
 
-config_files = {}
-listen_port = 53
-listen_host = ''
+def main():
 
-try:
-    options, filenames = getopt.getopt(sys.argv[1:], "p:h:")
-except getopt.GetoptError:
-    usage(sys.argv[0])
+    config_files = {}
+    listen_port = 53
+    listen_host = ''
 
-for option, value in options:
-    if option == "-p":
-        listen_port = int(value)
-    elif option == "-h":
-        listen_host = value
-if not filenames:
-    filenames = ['pymds.conf']
-for f in filenames:
-    if f in config_files:
-        raise Exception("repeated configuration")
-    config_files[f] = {}
+    try:
+        options, filenames = getopt.getopt(sys.argv[1:], "p:h:")
+    except getopt.GetoptError:
+        usage(sys.argv[0])
 
-sys.stdout.write("%s starting on port %d\n" % (sys.argv[0], listen_port))
-read_config()
-signal.signal(signal.SIGHUP, reread)
-for config in config_files.values():
-    sys.stdout.write("%s: serving for domain %s\n" % (sys.argv[0], ".".join(config['domain'])))
-sys.stdout.flush()
-sys.stderr.flush()
-serve()
+    for option, value in options:
+        if option == "-p":
+            listen_port = int(value)
+        elif option == "-h":
+            listen_host = value
+    if not filenames:
+        filenames = ['pymds.conf']
+    for f in filenames:
+        if f in config_files:
+            raise Exception("repeated configuration")
+        config_files[f] = {}
+
+    sys.stdout.write("%s starting on port %d\n" % (sys.argv[0], listen_port))
+    read_config(config_files)
+    signal.signal(signal.SIGHUP, reread)
+    for config in config_files.values():
+        sys.stdout.write("%s: serving for domain %s\n" % (sys.argv[0], ".".join(config['domain'])))
+    sys.stdout.flush()
+    sys.stderr.flush()
+    serve(config_files, listen_host, listen_port)
+
+if __name__ == "__main__":
+
+    sys.exit(main())
+

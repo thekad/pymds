@@ -30,7 +30,7 @@
 
 import struct
 
-from utils import *
+from pymds.utils import *
 
 class Source(object):
     def __init__(self, filename):
