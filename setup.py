@@ -9,7 +9,7 @@ import setuptools
 
 setuptools.setup (
     name = 'pymds',
-    version = '0.4',
+    version = '0.5',
     package_dir = { '': 'src' },
     packages = setuptools.find_packages('src'),
     zip_safe = True,
